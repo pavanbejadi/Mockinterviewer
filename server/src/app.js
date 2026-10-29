@@ -24,9 +24,28 @@ const app = express();
 // MIDDLEWARE (runs on every request, in order)
 // ============================================
 
-// 1. CORS: Allow our frontend (React) to talk to this backend
-//    Without this, browsers will block requests from localhost:5173 → localhost:5000
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+// 1. CORS: Allow the deployed frontend and local development frontend.
+// CLIENT_URL can contain additional comma-separated origins (for example, a
+// custom Vercel domain) and is read from the Render service environment.
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'https://mockinterviewer-6cmv-teal.vercel.app',
+  ...(process.env.CLIENT_URL || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+]);
+
+app.use(cors({
+  origin(origin, callback) {
+    // Requests without an Origin header are not browser cross-origin requests.
+    if (!origin || allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+  },
+}));
 
 // 2. Body Parser: Convert incoming JSON requests to JavaScript objects
 //    10mb limit to handle large resume text and interview data
