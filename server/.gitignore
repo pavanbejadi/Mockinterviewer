@@ -1,0 +1,9 @@
+node_modules
+.env
+uploads/
+server/.env
+
+.env.*
+!.env.example
+
+.vercel/
